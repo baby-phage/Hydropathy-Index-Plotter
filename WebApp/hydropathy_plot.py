@@ -203,6 +203,10 @@ with Plot:
             ax.legend(fontsize= 15,edgecolor = "black",facecolor="white")
 
             Plot.pyplot(fig)
+            
+            Plot.markdown("***")
+            Plot.markdown("Check out my other projects at my [github](https://github.com/baby-phage).")
+            Plot.markdown("***")
 
 
 

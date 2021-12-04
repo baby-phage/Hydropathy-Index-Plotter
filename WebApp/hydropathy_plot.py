@@ -121,12 +121,6 @@ st.markdown("<style>.main {background-color: #FFFFFF;color:black;} </style>",uns
 with Title:
     Title.markdown("<h1 style='font-family : century gothic;text-align: center; color: Black;'><u>HYDROPATHY INDEX PLOTTER<u></h1>", unsafe_allow_html=True)
 
-# with Intro:
-#     Intro.subheader("• What is Hydropathy Index?")
-#     Intro.caption("The hydropathy index of an amino acid is a number representing the hydrophobic or hydrophilic properties of its sidechain.")
-    # Why it is useful
-    # How it is calculated
-
 with Input_box:
     Input_box.markdown("<h4 style='font-family : century gothic;text-align: center; color: Black;'><u>ENTER YOUR SEQUENCE or ACCESSION ID<u></h4>", unsafe_allow_html=True)
     input = Input_box.text_area(label="Enter NCBI Accession ID of your peptide sequence or Paste the FASTA sequence in the box",value="NP_001035835.1")

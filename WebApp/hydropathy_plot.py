@@ -132,7 +132,7 @@ with Input_box:
     input = Input_box.text_area(label="Enter NCBI Accession ID of your peptide sequence or Paste the FASTA sequence in the box",value="NP_001035835.1")
     input_type = Input_box.radio(label="| Select Your Input Type |",options=["ACCESSION ID","FASTA"])
     window_size = Input_box.slider(label="| Specify your window size |", min_value=3, max_value=21, step=2, value=7)
-    edge_weight = Input_box.slider(label="| Specify the weight of the farthest element in your window |", min_value=0,max_value=100, step=1, value=100)
+    edge_weight = Input_box.slider(label="| Specify Edge Weight |", min_value=0,max_value=100, step=1, value=100)
     input_submit = st.form_submit_button("Submit")
     if input_submit:
         if input_type == "FASTA":

@@ -1,2 +1,2 @@
 # Hydropathy-Index-Plotter
-Generates hydropathy plot from a protein sequence (FASTA format).
+A web-based application that generates hydropathy plot from a protein sequence (FASTA format).

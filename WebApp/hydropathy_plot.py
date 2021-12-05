@@ -173,7 +173,6 @@ with Plot:
 
 
             ax.set_xlim(0,len(SEQ))
-            ax.set_xticks(np.arange(0,len(SEQ)+1,20))
             ax.xaxis.set_minor_locator(MultipleLocator(5))
             ax.yaxis.set_minor_locator(MultipleLocator(0.2))
             ax.tick_params(bottom=True,

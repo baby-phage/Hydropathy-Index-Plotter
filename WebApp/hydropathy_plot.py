@@ -5,6 +5,9 @@ from matplotlib.ticker import MultipleLocator, AutoMinorLocator, FormatStrFormat
 import requests
 import numpy as np
 
+######################################################################################## BACKEND ############################################################################
+
+
 @st.cache()
 def Fetch_Sequence_NCBI(Accession_ID: str)-> str:
     """
@@ -108,6 +111,8 @@ def Hydropathicity_array_gen(AA_seq: str, Window_size : int, EDGE_weight = 100)-
 
     return np.array(hyrdopathicity_array),AA_range
 
+
+######################################################################################## FRONTEND #######################################################################
 
 
 Title = st.container()

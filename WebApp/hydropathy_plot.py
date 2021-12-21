@@ -5,11 +5,12 @@ from matplotlib.ticker import MultipleLocator, AutoMinorLocator, FormatStrFormat
 import requests
 import numpy as np
 
+
 ######################################################################################## BACKEND ############################################################################
 
 
 @st.cache()
-def Fetch_Sequence_NCBI(Accession_ID: str)-> str:
+def Fetch_Sequence_NCBI(Accession_ID: str) -> str:
     """
     :param Accession_ID: Accession ID of the desired protein
     :return: Protein sequence in FASTA format
@@ -22,8 +23,9 @@ def Fetch_Sequence_NCBI(Accession_ID: str)-> str:
     else:
         return Sequence.text
 
+
 @st.cache()
-def FASTA_Parser(FASTA_seq : str)-> str:
+def FASTA_Parser(FASTA_seq: str) -> int | str:
     """
     :param FASTA_seq: Protein sequence in FASTA format
     :return: linear aminoacid sequence
@@ -38,19 +40,19 @@ def FASTA_Parser(FASTA_seq : str)-> str:
             AA_seq = "".join(FASTA_seq[1:])
             return AA_seq
 
+
 @st.cache()
-def Preview_Sequence(Seq : str)-> str:
+def Preview_Sequence(Seq: str) -> str:
     output = []
-    for index in range(0,len(Seq),10):
+    for index in range(0, len(Seq), 10):
         if index % 60 != 0:
-            output.append(Seq[index:index+10])
+            output.append(Seq[index:index + 10])
         else:
-            output.append("\n"+Seq[index:index+10])
+            output.append("\n" + Seq[index:index + 10])
     return "    ".join(output)
 
 
-
-def Hydropathicity_value_calc(AA_seq_segment : str, Edge_weight = 100)->float:
+def Hydropathicity_value_calc(AA_seq_segment: str, Edge_weight=100, Model="Linear Variation") -> float:
     """
     :param AA_seq: Amino acid sequence
     :return: Hydropathy index of the corresponding sequence
@@ -78,38 +80,48 @@ def Hydropathicity_value_calc(AA_seq_segment : str, Edge_weight = 100)->float:
         "H": -3.2,
     }
 
-    # Linear weight variation
-    seq_len= len(AA_seq_segment)
+    seq_len = len(AA_seq_segment)
     edge_weight = Edge_weight
     center_weight = 100
-    weights = np.concatenate((np.linspace(edge_weight, center_weight, num= seq_len // 2 + 1), np.linspace(center_weight,edge_weight, num= seq_len // 2 + 1)[1:]),axis=None)
 
-    hydropathy_index = 0
-    for index,AA in enumerate(AA_seq_segment):
-        hydropathy_index += (Kyte_Doolittle_scale[AA]*weights[index])
+    if Model == "Linear Variation":
+        # Linear weight variation
+        weights = np.concatenate((np.linspace(edge_weight, center_weight, num=seq_len // 2 + 1),
+                                  np.linspace(center_weight, edge_weight, num=seq_len // 2 + 1)[1:]),
+                                 axis=None)
 
-    avg_hydropathy_index = round(hydropathy_index/np.sum(weights),3)
-    return avg_hydropathy_index
+        hydropathy_index = 0
+        for index, AA in enumerate(AA_seq_segment):
+            hydropathy_index += (Kyte_Doolittle_scale[AA] * weights[index])
+
+        avg_hydropathy_index = round(hydropathy_index / np.sum(weights), 3)
+        return avg_hydropathy_index
+    else:
+        # Exponential weight variation
+        weights = np.concatenate((np.geomspace(edge_weight, center_weight, num=seq_len // 2 + 1),
+                                  np.geomspace(center_weight, edge_weight, num=seq_len // 2 + 1)[1:]),
+                                 axis=None)
+
+        hydropathy_index = 0
+        for index, AA in enumerate(AA_seq_segment):
+            hydropathy_index += (Kyte_Doolittle_scale[AA] * weights[index])
+
+        avg_hydropathy_index = round(hydropathy_index / np.sum(weights), 3)
+        return avg_hydropathy_index
 
 
-
-def Hydropathicity_array_gen(AA_seq: str, Window_size : int, EDGE_weight = 100)-> (list[float],list[int]):
-    """
-    :param AA_seq:
-    :param window_size:
-    :param Edge_weight:
-    :return:
-    """
-
+def Hydropathicity_array_gen(AA_seq: str, Window_size: int, EDGE_weight=100, model="Linear Variation") -> (
+        list[float], list[int]):
     hyrdopathicity_array = []
     AA_range = np.arange(start=(Window_size // 2),
-                         stop=(len(AA_seq)-(Window_size)//2))
+                         stop=(len(AA_seq) - (Window_size) // 2))
     for index in AA_range:
         hyrdopathicity_array.append(Hydropathicity_value_calc(
-                                                                AA_seq_segment = AA_seq[index-(Window_size//2) : index+(Window_size//2+1)],
-                                                                Edge_weight= EDGE_weight))
+            AA_seq_segment=AA_seq[index - (Window_size // 2): index + (Window_size // 2 + 1)],
+            Edge_weight=EDGE_weight,
+            Model=model))
 
-    return np.array(hyrdopathicity_array),AA_range
+    return np.array(hyrdopathicity_array), AA_range
 
 
 ######################################################################################## FRONTEND #######################################################################
@@ -121,18 +133,30 @@ Input_box = st.form("input")
 Outbut_box = st.container()
 Plot = st.container()
 
-st.markdown("<style>.main {background-color: #FFFFFF;color:black;} </style>",unsafe_allow_html=True)
+st.markdown("<style>.main {background-color: #FFFFFF;color:black;} </style>", unsafe_allow_html=True)
 
 with Title:
-    Title.markdown("<h1 style='font-family : century gothic;text-align: center; color: Black;'><u>HYDROPATHY INDEX PLOTTER<u></h1>", unsafe_allow_html=True)
+    Title.markdown(
+        "<h1 style='font-family : century gothic;text-align: center; color: Black;'><u>HYDROPATHY INDEX PLOTTER<u></h1>",
+        unsafe_allow_html=True)
 
 with Input_box:
-    Input_box.markdown("<h4 style='font-family : century gothic;text-align: center; color: Black;'><u>ENTER YOUR SEQUENCE or ACCESSION ID<u></h4>", unsafe_allow_html=True)
-    input = Input_box.text_area(label="Enter NCBI Accession ID of your peptide sequence or Paste the FASTA sequence in the box",value="NP_001035835.1")
-    input_type = Input_box.radio(label="| Select Your Input Type |",options=["ACCESSION ID","FASTA"])
-    window_size = Input_box.slider(label="| Specify your window size |", min_value=3, max_value=21, step=2, value=7)
-    edge_weight = Input_box.slider(label="| Specify Edge Weight |", min_value=0,max_value=100, step=1, value=100)
+    Input_box.markdown(
+        "<h4 style='font-family : century gothic;text-align: center; color: Black;'><u>ENTER YOUR SEQUENCE or ACCESSION ID<u></h4>",
+        unsafe_allow_html=True)
+    input = Input_box.text_area(
+        label="Enter NCBI Accession ID of your peptide sequence or Paste the FASTA sequence in the box",
+        value="NP_001035835.1")
+    input_type = Input_box.radio(label="| Select Your Input Type |", options=["ACCESSION ID", "FASTA"])
+    computation_model = Input_box.selectbox(label="| Computation Model |",
+                                            options=["Linear Variation", "Exponential Variation"])
+    window_size = Input_box.slider(label="| Window Size |", min_value=3, max_value=21, step=2, value=7)
+    edge_weight = Input_box.slider(label="| Edge Weight |", min_value=1, max_value=100, step=1, value=100)
     input_submit = st.form_submit_button("Submit")
+
+    with st.expander("*Click here to know more about the parameters"):
+        st.markdown("<h6 style='font-family : Garamond;text-align: center; color: #778899;'><u>To be Updated<u></h6>",unsafe_allow_html=True)
+
     if input_submit:
         if input_type == "FASTA":
             chk = FASTA_Parser(input.strip())
@@ -148,15 +172,22 @@ with Input_box:
                 SEQ = FASTA_Parser(chk).upper()
 
         if chk != -1:
-            Outbut_box.markdown("<h4 style='font-family : century gothic;text-align: center; color: Black;'><u>PEPTIDE SEQUENCE<u></h4>", unsafe_allow_html=True)
+            Outbut_box.markdown(
+                "<h4 style='font-family : century gothic;text-align: center; color: Black;'><u>PEPTIDE SEQUENCE<u></h4>",
+                unsafe_allow_html=True)
             Outbut_box.text(Preview_Sequence(SEQ))
 
 with Plot:
     if input_submit == True and chk != -1:
-        Plot.markdown("<h4 style='font-family : century gothic;text-align: center; color: Black;'><u>HYDROPATHY PLOT<u></h4>", unsafe_allow_html=True)
+        Plot.markdown(
+            "<h4 style='font-family : century gothic;text-align: center; color: Black;'><u>HYDROPATHY PLOT<u></h4>",
+            unsafe_allow_html=True)
 
         try:
-            hydropathicity_values,Amino_Acid_range = Hydropathicity_array_gen(SEQ,Window_size=window_size)
+            hydropathicity_values, Amino_Acid_range = Hydropathicity_array_gen(SEQ,
+                                                                               Window_size=window_size,
+                                                                               EDGE_weight=edge_weight,
+                                                                               model=computation_model)
             validity = True
         except KeyError:
             validity = False
@@ -168,16 +199,15 @@ with Plot:
             fig.set_size_inches(18.5, 12)
             fig.set_dpi(800)
             ax.hlines(y=0,
-                      xmin=0,xmax=len(SEQ),
-                      color = "black",
+                      xmin=0, xmax=len(SEQ),
+                      color="black",
                       linestyles="--",
-                      alpha = 0.5)
-            ax.plot(Amino_Acid_range,hydropathicity_values,
-                    color ="black",
-                    alpha = 0.75)
+                      alpha=0.5)
+            ax.plot(Amino_Acid_range, hydropathicity_values,
+                    color="black",
+                    alpha=0.75)
 
-
-            ax.set_xlim(0,len(SEQ))
+            ax.set_xlim(0, len(SEQ))
             ax.xaxis.set_minor_locator(MultipleLocator(5))
             ax.yaxis.set_minor_locator(MultipleLocator(0.2))
             ax.tick_params(bottom=True,
@@ -189,31 +219,24 @@ with Plot:
                            labelleft=True,
                            labelright=True)
 
-
-            ax.fill_between(Amino_Acid_range,hydropathicity_values,
-                            where=(hydropathicity_values>=0),
-                            interpolate=True,
-                            alpha =0.75,
-                            label = "Hydrophobic Regions")
-            ax.fill_between(Amino_Acid_range,hydropathicity_values,
-                            where=(hydropathicity_values<=0),
-                            color = "teal",
+            ax.fill_between(Amino_Acid_range, hydropathicity_values,
+                            where=(hydropathicity_values >= 0),
                             interpolate=True,
                             alpha=0.75,
-                            label = "Hydrophilic   Regions")
+                            label="Hydrophobic Regions")
+            ax.fill_between(Amino_Acid_range, hydropathicity_values,
+                            where=(hydropathicity_values <= 0),
+                            color="teal",
+                            interpolate=True,
+                            alpha=0.75,
+                            label="Hydrophilic   Regions")
 
-            ax.set_xlabel("Amino Acid Number",fontsize = "18")
-            ax.set_ylabel("← Hydropathy Index →",fontsize = "18")
-            ax.legend(fontsize= 15,edgecolor = "black",facecolor="white")
+            ax.set_xlabel("Amino Acid Number →", fontsize="18")
+            ax.set_ylabel("← Hydropathy Index →", fontsize="18")
+            ax.legend(fontsize=15, edgecolor="black", facecolor="white")
 
             Plot.pyplot(fig)
-            
+
             Plot.markdown("***")
             Plot.markdown("Check out my other projects at my [github](https://github.com/baby-phage).")
             Plot.markdown("***")
-
-
-
-
-
-

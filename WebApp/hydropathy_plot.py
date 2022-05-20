@@ -126,6 +126,10 @@ def Hydropathicity_array_gen(AA_seq: str, Window_size: int, EDGE_weight=100, mod
 
 ######################################################################################## FRONTEND #######################################################################
 
+st.set_page_config(
+   page_title="HYDROPATHY INDEX PLOTTER 📈",
+   page_icon="🌐",
+   layout="wide")
 
 Title = st.container()
 Intro = st.container()
